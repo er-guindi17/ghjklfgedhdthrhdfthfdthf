@@ -43,12 +43,12 @@ const useProximityGlow = <T extends HTMLElement>() => {
 
 const AnimatedStat = ({ value }: { value: number }) => {
     const countRef = useRef<HTMLSpanElement>(null);
+    const animationFrameIdRef = useRef<number | null>(null);
 
     useEffect(() => {
         const element = countRef.current;
         if (!element) return;
 
-        let animationFrameId: number;
         const start = 0;
         const end = value;
         if (start === end) {
@@ -64,19 +64,21 @@ const AnimatedStat = ({ value }: { value: number }) => {
             const progress = Math.min((now - startTime) / duration, 1);
             const nextValue = Math.floor(progress * end);
             
-            if (element) {
-                element.textContent = nextValue.toString();
+            if (countRef.current) {
+                countRef.current.textContent = nextValue.toString();
             }
 
             if (progress < 1) {
-                animationFrameId = requestAnimationFrame(animate);
+                animationFrameIdRef.current = requestAnimationFrame(animate);
             }
         };
         
-        animationFrameId = requestAnimationFrame(animate);
+        animationFrameIdRef.current = requestAnimationFrame(animate);
 
         return () => {
-            cancelAnimationFrame(animationFrameId);
+            if (animationFrameIdRef.current) {
+                cancelAnimationFrame(animationFrameIdRef.current);
+            }
         };
     }, [value]);
 
