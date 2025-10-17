@@ -156,14 +156,14 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
       gsap.set(cursorRef.current, { rotation: 0 });
 
       const updateCorners = (mouseX?: number, mouseY?: number) => {
-        if (!cursorRef.current) return;
+        if (!cursorRef.current || !cornersRef.current) return;
         const rect = target.getBoundingClientRect();
         const cursorRect = cursorRef.current.getBoundingClientRect();
 
         const cursorCenterX = cursorRect.left + cursorRect.width / 2;
         const cursorCenterY = cursorRect.top + cursorRect.height / 2;
 
-        const [tlc, trc, brc, blc] = Array.from(cornersRef.current!);
+        const [tlc, trc, brc, blc] = Array.from(cornersRef.current);
 
         const { borderWidth, cornerSize, parallaxStrength } = constants;
 
@@ -301,21 +301,39 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     window.addEventListener('mouseover', enterHandler, { passive: true });
 
     return () => {
+      // Clear any pending timeouts
       if (resumeTimeout) {
         clearTimeout(resumeTimeout);
       }
+      
+      // Remove all window-level event listeners
       window.removeEventListener('mousemove', moveHandler);
       window.removeEventListener('mouseover', enterHandler);
       window.removeEventListener('scroll', scrollHandler);
       window.removeEventListener('mousedown', mouseDownHandler);
       window.removeEventListener('mouseup', mouseUpHandler);
 
-
+      // Clean up listeners on the currently active target, if any
       if (activeTarget) {
         cleanupTarget(activeTarget);
       }
 
+      // **CRITICAL FIX**: Kill all active tweens on all cursor elements
+      // This prevents animations from trying to update unmounted DOM nodes
+      if (cursorRef.current) {
+        gsap.killTweensOf(cursorRef.current);
+      }
+      if (dotRef.current) {
+        gsap.killTweensOf(dotRef.current);
+      }
+      if (cornersRef.current) {
+        gsap.killTweensOf(Array.from(cornersRef.current));
+      }
+
+      // Kill the main spinning timeline
       spinTl.current?.kill();
+
+      // Restore the original cursor style
       document.body.style.cursor = originalCursor;
     };
   }, [targetSelector, spinDuration, moveCursor, constants, hideDefaultCursor]);
@@ -323,6 +341,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
   useEffect(() => {
     if (!cursorRef.current || !spinTl.current) return;
 
+    // This effect ensures the spin duration can be updated dynamically
     if (spinTl.current.isActive()) {
       spinTl.current.kill();
       spinTl.current = gsap
