@@ -156,7 +156,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
       gsap.set(cursorRef.current, { rotation: 0 });
 
       const updateCorners = (mouseX?: number, mouseY?: number) => {
-        if (!cursorRef.current || !cornersRef.current) return;
+        // CRITICAL FIX: Ensure the target element is still in the DOM before getting its dimensions.
+        if (!cursorRef.current || !cornersRef.current || !target.isConnected) return;
         const rect = target.getBoundingClientRect();
         const cursorRect = cursorRef.current.getBoundingClientRect();
 
@@ -227,6 +228,14 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
       let moveThrottle: number | null = null;
       const targetMove = (ev: Event) => {
+        // CRITICAL FIX: If the target is no longer connected, trigger the leave behavior.
+        if (!target.isConnected) {
+            if(currentLeaveHandler) {
+                currentLeaveHandler();
+            }
+            return;
+        }
+
         if (moveThrottle || isAnimatingToTarget) return;
         moveThrottle = requestAnimationFrame(() => {
           const mouseEvent = ev as MouseEvent;
