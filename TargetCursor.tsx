@@ -301,6 +301,9 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     window.addEventListener('mouseover', enterHandler, { passive: true });
 
     return () => {
+      if (resumeTimeout) {
+        clearTimeout(resumeTimeout);
+      }
       window.removeEventListener('mousemove', moveHandler);
       window.removeEventListener('mouseover', enterHandler);
       window.removeEventListener('scroll', scrollHandler);

@@ -396,7 +396,14 @@ export default function App() {
   const [stats, setStats] = useState(() => {
     try {
       const storedStats = localStorage.getItem('flechazoStats');
-      return storedStats ? JSON.parse(storedStats) : { analyzed: 0, generated: 0 };
+      if (storedStats) {
+        const parsedStats = JSON.parse(storedStats);
+        // Robust check to ensure the data is valid
+        if (parsedStats && typeof parsedStats.analyzed === 'number' && typeof parsedStats.generated === 'number') {
+          return parsedStats;
+        }
+      }
+      return { analyzed: 0, generated: 0 };
     } catch (error) {
       console.error("Could not parse stats from localStorage", error);
       return { analyzed: 0, generated: 0 };
