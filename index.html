@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M20 80C30 50 60 40 90 40' stroke='%23F87171' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M75 25L90 40L75 55' stroke='%23F87171' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flechazo AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/TargetCursor.css">
+    <style>
+      :root {
+        --glow-color: hsl(262, 89%, 75%);
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #020617;
+        overflow: hidden;
+      }
+      
+      .aurora-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.6;
+      }
+
+      .aurora-background::before,
+      .aurora-background::after {
+        content: '';
+        position: absolute;
+        width: 800px;
+        height: 800px;
+        border-radius: 50%;
+        filter: blur(150px);
+        mix-blend-mode: screen;
+      }
+
+      .aurora-background::before {
+        background: radial-gradient(circle, #ff3377, transparent 60%);
+        top: -20%;
+        left: -20%;
+        animation: aurora-one 25s linear infinite alternate;
+      }
+
+      .aurora-background::after {
+        background: radial-gradient(circle, #3377ff, transparent 60%);
+        bottom: -20%;
+        right: -20%;
+        animation: aurora-two 20s linear infinite alternate;
+      }
+      
+      @keyframes aurora-one {
+        0% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(150px, 100px) scale(1.2); }
+        100% { transform: translate(50px, -50px) scale(1); }
+      }
+
+      @keyframes aurora-two {
+        0% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-150px, -100px) scale(1.2); }
+        100% { transform: translate(-50px, 50px) scale(1); }
+      }
+
+      /* Glassmorphism Effect */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+
+      /* --- Proximity Glow Effect (Windows Fluent "Reveal" Style) --- */
+      .interactive-glow {
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .interactive-glow::before {
+        content: "";
+        position: absolute;
+        left: var(--mouse-x, 50%);
+        top: var(--mouse-y, 50%);
+        width: 150px;
+        height: 150px;
+        background-image: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.2) 0%,
+          rgba(255, 255, 255, 0.1) 40%,
+          rgba(255, 255, 255, 0) 70%
+        );
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        transition: opacity 0.3s ease-out;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .interactive-glow:hover::before {
+        opacity: 1;
+      }
+      
+      /* --- Custom Range Slider --- */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(90deg, #38bdf8, #f472b6, #ef4444);
+        border-radius: 3px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        background: #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 0 10px #fff, 0 0 20px var(--glow-color), 0 0 5px rgba(0, 0, 0, 0.5);
+        transition: box-shadow 0.2s ease-in-out;
+      }
+
+      input[type="range"]::-webkit-slider-thumb:hover {
+        box-shadow: 0 0 15px #fff, 0 0 30px var(--glow-color), 0 0 5px rgba(0, 0, 0, 0.5);
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        background: #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 0 10px #fff, 0 0 20px var(--glow-color), 0 0 5px rgba(0, 0, 0, 0.5);
+        transition: box-shadow 0.2s ease-in-out;
+      }
+      
+      input[type="range"]::-moz-range-thumb:hover {
+        box-shadow: 0 0 15px #fff, 0 0 30px var(--glow-color), 0 0 5px rgba(0, 0, 0, 0.5);
+      }
+      
+      /* Animation Keyframes */
+      @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+      }
+      .animate-fadeInUp {
+        animation: fadeInUp 0.5s ease-out forwards;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/esm/index.js"
+  }
+}
+</script>
+</head>
+  <body class="bg-slate-950">
+    <div class="aurora-background"></div>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
