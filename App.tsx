@@ -2,7 +2,6 @@ import React, { useState, useCallback, ChangeEvent, useRef, useEffect } from 're
 import { View } from './types';
 import { generateIceBreakers, generateChatReply } from './services/geminiService';
 import { LogoIcon, AnalyzeIcon, IceBreakerIcon, MoreOptionsIcon, BackArrowIcon, CopyIcon, MagicIcon, UploadIcon } from './components/icons';
-import TargetCursor from './TargetCursor';
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -98,7 +97,7 @@ const LoginView: React.FC<{ onLogin: () => void }> = React.memo(({ onLogin }) =>
       </p>
       <button
         onClick={onLogin}
-        className="cursor-target mt-12 w-full max-w-xs bg-indigo-600/80 hover:bg-indigo-500/80 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-transform duration-300 transform hover:scale-105 active:scale-100 border border-indigo-400"
+        className="mt-12 w-full max-w-xs bg-indigo-600/80 hover:bg-indigo-500/80 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-transform duration-300 transform hover:scale-105 active:scale-100 border border-indigo-400"
       >
         Empezar
       </button>
@@ -108,7 +107,7 @@ const LoginView: React.FC<{ onLogin: () => void }> = React.memo(({ onLogin }) =>
 
 const Header: React.FC<{ onBack: () => void, title: string }> = React.memo(({ onBack, title }) => (
     <header className="absolute top-0 left-0 w-full p-4 flex items-center z-20">
-        <button onClick={onBack} className="cursor-target p-2 rounded-full text-gray-200 glass-card hover:bg-white/20 transition-all active:scale-95">
+        <button onClick={onBack} className="p-2 rounded-full text-gray-200 glass-card hover:bg-white/20 transition-all active:scale-95">
             <BackArrowIcon className="w-6 h-6" />
         </button>
         <h2 className="text-xl font-bold ml-4 text-shadow-lg">{title}</h2>
@@ -147,7 +146,7 @@ const Dashboard: React.FC<{ onNavigate: (view: View) => void; stats: { analyzed:
         <button
           ref={iceBreakerRef}
           onClick={() => onNavigate(View.IceBreaker)}
-          className="cursor-target w-full flex items-center p-6 glass-card rounded-2xl shadow-lg transition-all duration-200 hover:bg-white/10 active:scale-[0.98] interactive-glow"
+          className="w-full flex items-center p-6 glass-card rounded-2xl shadow-lg transition-all duration-200 hover:bg-white/10 active:scale-[0.98] interactive-glow"
         >
           <div className="p-3 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg"><IceBreakerIcon className="w-8 h-8"/></div>
           <span className="text-xl font-bold ml-4">Empieza la Conversación</span>
@@ -155,7 +154,7 @@ const Dashboard: React.FC<{ onNavigate: (view: View) => void; stats: { analyzed:
          <button
           ref={analyzerRef}
           onClick={() => onNavigate(View.ChatAnalyzer)}
-          className="cursor-target w-full flex items-center p-6 glass-card rounded-2xl shadow-lg transition-all duration-200 hover:bg-white/10 active:scale-[0.98] interactive-glow"
+          className="w-full flex items-center p-6 glass-card rounded-2xl shadow-lg transition-all duration-200 hover:bg-white/10 active:scale-[0.98] interactive-glow"
         >
           <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg"><AnalyzeIcon className="w-8 h-8" /></div>
           <span className="text-xl font-bold ml-4">Analizar Conversación</span>
@@ -163,7 +162,7 @@ const Dashboard: React.FC<{ onNavigate: (view: View) => void; stats: { analyzed:
         <button
           ref={moreOptionsRef}
           onClick={() => onNavigate(View.MoreOptions)}
-          className="cursor-target w-full flex items-center p-6 glass-card rounded-2xl shadow-lg transition-all duration-200 hover:bg-white/10 active:scale-[0.98] interactive-glow"
+          className="w-full flex items-center p-6 glass-card rounded-2xl shadow-lg transition-all duration-200 hover:bg-white/10 active:scale-[0.98] interactive-glow"
         >
           <div className="p-3 bg-gray-600 rounded-lg"><MoreOptionsIcon className="w-8 h-8" /></div>
           <span className="text-xl font-bold ml-4">Más Opciones</span>
@@ -178,10 +177,13 @@ const IceBreakerView: React.FC<{ onBack: () => void; onGenerated: () => void; }>
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const copyTimeoutRef = useRef<number | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    // Cleanup function to clear timeout when the component unmounts
+    isMountedRef.current = true;
+    // Cleanup for both mount status and copy timeout
     return () => {
+      isMountedRef.current = false;
       if (copyTimeoutRef.current) {
         clearTimeout(copyTimeoutRef.current);
       }
@@ -192,10 +194,13 @@ const IceBreakerView: React.FC<{ onBack: () => void; onGenerated: () => void; }>
     setLoading(true);
     setIceBreakers([]);
     const results = await generateIceBreakers();
-    setIceBreakers(results);
-    setLoading(false);
-    if (results.length > 0 && !results[0].startsWith("Lo siento")) {
-      onGenerated();
+    // Only update state if the component is still mounted
+    if (isMountedRef.current) {
+      setIceBreakers(results);
+      setLoading(false);
+      if (results.length > 0 && !results[0].startsWith("Lo siento")) {
+        onGenerated();
+      }
     }
   }, [onGenerated]);
 
@@ -221,7 +226,7 @@ const IceBreakerView: React.FC<{ onBack: () => void; onGenerated: () => void; }>
         {!loading && iceBreakers.length > 0 && (
           <div className="w-full max-w-md space-y-4">
             {iceBreakers.map((text, index) => (
-              <div key={index} className="cursor-target glass-card p-4 rounded-xl flex items-center justify-between animate-fadeInUp" style={{animationDelay: `${index * 100}ms`}}>
+              <div key={index} className="glass-card p-4 rounded-xl flex items-center justify-between animate-fadeInUp" style={{animationDelay: `${index * 100}ms`}}>
                 <p className="flex-grow pr-4">{text}</p>
                 <button onClick={() => handleCopy(text, index)} className="p-2 rounded-full bg-indigo-600/80 hover:bg-indigo-500/80 transition-all active:scale-90 flex-shrink-0">
                   {copiedIndex === index ? <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> : <CopyIcon className="w-5 h-5" />}
@@ -242,7 +247,7 @@ const IceBreakerView: React.FC<{ onBack: () => void; onGenerated: () => void; }>
         <button
           onClick={handleGenerate}
           disabled={loading}
-          className="cursor-target w-full bg-indigo-600/80 text-white font-bold py-4 px-8 rounded-full shadow-lg border border-indigo-400 hover:bg-indigo-500/80 transition-transform duration-300 transform hover:scale-105 active:scale-100 disabled:opacity-50 flex items-center justify-center space-x-2"
+          className="w-full bg-indigo-600/80 text-white font-bold py-4 px-8 rounded-full shadow-lg border border-indigo-400 hover:bg-indigo-500/80 transition-transform duration-300 transform hover:scale-105 active:scale-100 disabled:opacity-50 flex items-center justify-center space-x-2"
         >
             <MagicIcon className="w-6 h-6"/>
             <span>{loading ? 'Generando...' : 'Generar Flechazos'}</span>
@@ -260,10 +265,13 @@ const ChatAnalyzerView: React.FC<{ onBack: () => void; onAnalyzed: () => void; }
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const copyTimeoutRef = useRef<number | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    // Cleanup function to clear timeout when the component unmounts
+    isMountedRef.current = true;
+    // Cleanup for both mount status and copy timeout
     return () => {
+      isMountedRef.current = false;
       if (copyTimeoutRef.current) {
         clearTimeout(copyTimeoutRef.current);
       }
@@ -284,9 +292,12 @@ const ChatAnalyzerView: React.FC<{ onBack: () => void; onAnalyzed: () => void; }
     setLoading(true);
     setReply('');
     const result = await generateChatReply(image.base64, image.mime, tone);
-    setReply(result);
-    setLoading(false);
-    onAnalyzed();
+    // Only update state if the component is still mounted
+    if (isMountedRef.current) {
+      setReply(result);
+      setLoading(false);
+      onAnalyzed();
+    }
   };
   
   const handleCopyReply = () => {
@@ -310,7 +321,7 @@ const ChatAnalyzerView: React.FC<{ onBack: () => void; onAnalyzed: () => void; }
         <div className="flex flex-col items-center space-y-6">
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="cursor-target w-full max-w-sm glass-card p-3 rounded-2xl shadow-lg cursor-pointer transition-all duration-200 hover:bg-white/10 active:scale-[0.98]"
+            className="w-full max-w-sm glass-card p-3 rounded-2xl shadow-lg cursor-pointer transition-all duration-200 hover:bg-white/10 active:scale-[0.98]"
           >
             {image ? (
               <img src={image.url} alt="Chat screenshot" className="w-full rounded-xl object-contain max-h-[60vh] md:max-h-full" />
@@ -337,7 +348,7 @@ const ChatAnalyzerView: React.FC<{ onBack: () => void; onAnalyzed: () => void; }
             <div className="w-full flex justify-end animate-fadeInUp">
                 <div 
                     onClick={handleCopyReply}
-                    className="cursor-target glass-card text-white p-4 rounded-3xl rounded-br-lg max-w-sm relative shadow-md border-indigo-400/50 cursor-pointer transition-all duration-200 hover:bg-white/20 active:scale-95"
+                    className="glass-card text-white p-4 rounded-3xl rounded-br-lg max-w-sm relative shadow-md border-indigo-400/50 cursor-pointer transition-all duration-200 hover:bg-white/20 active:scale-95"
                 >
                     <p>{reply}</p>
                     <div className={`absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full transition-opacity duration-300 ${copied ? 'opacity-100' : 'opacity-0'}`}>
@@ -357,7 +368,7 @@ const ChatAnalyzerView: React.FC<{ onBack: () => void; onAnalyzed: () => void; }
             max="100"
             value={tone}
             onChange={(e) => setTone(Number(e.target.value))}
-            className="cursor-target"
+            className=""
           />
           <div className="flex justify-between text-xs font-semibold text-gray-300 mt-2 px-1">
             <span>+nerd</span>
@@ -367,7 +378,7 @@ const ChatAnalyzerView: React.FC<{ onBack: () => void; onAnalyzed: () => void; }
         <button
           onClick={handleGenerate}
           disabled={!image || loading}
-          className="cursor-target w-full bg-indigo-600/80 text-white font-bold py-3 mt-4 rounded-full shadow-lg border border-indigo-400 hover:bg-indigo-500/80 transition-transform duration-300 transform hover:scale-105 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          className="w-full bg-indigo-600/80 text-white font-bold py-3 mt-4 rounded-full shadow-lg border border-indigo-400 hover:bg-indigo-500/80 transition-transform duration-300 transform hover:scale-105 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
         >
           <MagicIcon className="w-5 h-5"/>
           <span>{loading ? 'Analizando...' : 'Generar Respuesta'}</span>
@@ -401,7 +412,7 @@ const MoreOptionsView: React.FC<{ onBack: () => void; onResetStats: () => void; 
                         {!showConfirm ? (
                             <button
                                 onClick={() => setShowConfirm(true)}
-                                className="cursor-target w-full bg-red-600/50 hover:bg-red-500/50 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+                                className="w-full bg-red-600/50 hover:bg-red-500/50 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
                             >
                                 Reiniciar Estadísticas
                             </button>
@@ -409,8 +420,8 @@ const MoreOptionsView: React.FC<{ onBack: () => void; onResetStats: () => void; 
                             <div className="text-center animate-fadeInUp">
                                 <p className="font-semibold mb-3">¿Estás seguro?</p>
                                 <div className="flex space-x-4">
-                                    <button onClick={() => setShowConfirm(false)} className="cursor-target w-full bg-gray-600/80 hover:bg-gray-500/80 font-bold py-2 rounded-full transition-colors active:scale-95">Cancelar</button>
-                                    <button onClick={handleReset} className="cursor-target w-full bg-red-600 hover:bg-red-500 font-bold py-2 rounded-full transition-colors active:scale-95">Confirmar</button>
+                                    <button onClick={() => setShowConfirm(false)} className="w-full bg-gray-600/80 hover:bg-gray-500/80 font-bold py-2 rounded-full transition-colors active:scale-95">Cancelar</button>
+                                    <button onClick={handleReset} className="w-full bg-red-600 hover:bg-red-500 font-bold py-2 rounded-full transition-colors active:scale-95">Confirmar</button>
                                 </div>
                             </div>
                         )}
@@ -487,7 +498,7 @@ export default function App() {
 
   return (
     <main className="font-sans text-white h-screen overflow-hidden">
-        <TargetCursor />
+        
       <div className="max-w-7xl mx-auto h-full">
          <div className="w-full h-full max-w-md mx-auto md:max-w-none relative">
             {renderView()}
