@@ -42,15 +42,21 @@ const useProximityGlow = <T extends HTMLElement>() => {
 };
 
 const AnimatedStat = ({ value }: { value: number }) => {
-    const [currentValue, setCurrentValue] = useState(0);
     const countRef = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {
-        let start = 0;
+        const element = countRef.current;
+        if (!element) return;
+
+        let animationFrameId: number;
+        const start = 0;
         const end = value;
-        if (start === end) return;
+        if (start === end) {
+            element.textContent = end.toString();
+            return;
+        }
         
-        const duration = 1000; // 1 second
+        const duration = 1000;
         const startTime = Date.now();
 
         const animate = () => {
@@ -58,20 +64,23 @@ const AnimatedStat = ({ value }: { value: number }) => {
             const progress = Math.min((now - startTime) / duration, 1);
             const nextValue = Math.floor(progress * end);
             
-            if (countRef.current) {
-                // FIX: Use .toString() which is safer than the global String() constructor.
-                countRef.current.textContent = nextValue.toString();
+            if (element) {
+                element.textContent = nextValue.toString();
             }
 
             if (progress < 1) {
-                requestAnimationFrame(animate);
+                animationFrameId = requestAnimationFrame(animate);
             }
         };
         
-        requestAnimationFrame(animate);
+        animationFrameId = requestAnimationFrame(animate);
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+        };
     }, [value]);
 
-    return <span ref={countRef}>{currentValue}</span>;
+    return <span ref={countRef}>0</span>;
 };
 
 
